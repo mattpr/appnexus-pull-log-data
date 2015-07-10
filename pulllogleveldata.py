@@ -165,8 +165,9 @@ def checksum(filepath):
 
 
 def downloadNewLogs (filter, minTimePerRequestInSecs):
+    numExisting = 0
     numDownloaded = 0
-    numSkipped = 0
+    numFiltered = 0
     for log in logFiles:
         logType = log["name"]
         ensureDirExists(dataDir + "/" + logType)
@@ -178,7 +179,7 @@ def downloadNewLogs (filter, minTimePerRequestInSecs):
             status = logFile["status"] # e.g. new
             filename = buildFileName(logType, logHour, timestamp, splitPart, "gz")
             if filter != '' and filename.find(filter) == -1:
-              numSkipped += 1
+              numFiltered += 1
               continue # skip downloading this one
             if isNewLogFile(filename, checksum):
                 #download
@@ -203,11 +204,12 @@ def downloadNewLogs (filter, minTimePerRequestInSecs):
                     print "Sleeping for " + str(sleepTime) + " seconds"
                     time.sleep(sleepTime)
             else:
-                #skip
-                numSkipped += 1
+                #already have this one
+                numExisting += 1
 
-    print "Downloaded " + str(numDownloaded) + " files"
-    print "Skipped " + str(numSkipped) + " files"
+    print "Skipped " + str(numFiltered) + " (filtered) files"
+    print "Skipped " + str(numExisting) + " (existing) files"
+    print "Downloaded " + str(numDownloaded) + " (new/changed) files"
 
 def main (argv):
   global dataDir
