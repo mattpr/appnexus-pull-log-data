@@ -1,5 +1,4 @@
-Create "config" file.
-Fill in userId, password and memberId for your appnexus account and run.
+Create "pulllogleveldata-config" file.
 
 ```
 [LoginData]

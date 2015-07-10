@@ -1,6 +1,6 @@
 import json, requests, os, hashlib, sys, time, pickle, getopt, math, ConfigParser
 
-configFile = "config" # name of config file that contains all the following
+configFile = "pulllogleveldata-config" # name of config file that contains all the following
 username = ""
 password = ""
 memberId = "" # appnexus "Seat" id
@@ -16,7 +16,7 @@ username = Config.get("LoginData", "username")
 password = Config.get("LoginData", "password")
 memberId = Config.get("LoginData", "memberId")
 dataDir = Config.get("Paths", "dataDir")
-requestsPerMin = Config.get("RateLimiting", "requestsPerMin")
+requestsPerMin = Config.getint("RateLimiting", "requestsPerMin")
 
 # we do naive throttling (non-optimal) because your api rate limit is global (all processes)
 minTimePerRequestInSecs = 60/requestsPerMin
