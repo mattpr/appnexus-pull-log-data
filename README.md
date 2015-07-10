@@ -1,5 +1,18 @@
+Create "config" file.
 Fill in userId, password and memberId for your appnexus account and run.
 
+```
+[LoginData]
+username: apiuser
+password: foobar
+memberId: 911
+
+[Paths]
+dataDir: ./data
+
+[RateLimiting]
+requestsPerMin: 25
+```
 python pulllogleveldata.py -d [directoryForLogFiles] -f [filter]
 
 e.g.:  python pulllogleveldata.py -d "~/an-data/" -f "standard_feed"

@@ -1,9 +1,25 @@
-import json, requests, os, hashlib, sys, time, pickle, getopt, math
+import json, requests, os, hashlib, sys, time, pickle, getopt, math, ConfigParser
 
-dataDir = './download' # where to save log files
+configFile = "config" # name of config file that contains all the following
 username = ""
 password = ""
-memberId = ""
+memberId = "" # appnexus "Seat" id
+dataDir = "" # where to save log files
+requestsPerMin = 25
+
+
+# load config
+configFileAbs = os.path.join(os.path.abspath(os.path.dirname(__file__)), configFile)
+Config = ConfigParser.ConfigParser()
+Config.read(configFileAbs)
+username = Config.get("LoginData", "username")
+password = Config.get("LoginData", "password")
+memberId = Config.get("LoginData", "memberId")
+dataDir = Config.get("Paths", "dataDir")
+requestsPerMin = Config.get("RateLimiting", "requestsPerMin")
+
+# we do naive throttling (non-optimal) because your api rate limit is global (all processes)
+minTimePerRequestInSecs = 60/requestsPerMin
 
 url_auth = 'https://api.appnexus.com/auth'
 url_logList = 'http://api.appnexus.com/siphon'
@@ -148,7 +164,7 @@ def checksum(filepath):
     return md5.hexdigest()
 
 
-def downloadNewLogs (filter):
+def downloadNewLogs (filter, minTimePerRequestInSecs):
     numDownloaded = 0
     numSkipped = 0
     for log in logFiles:
@@ -182,6 +198,10 @@ def downloadNewLogs (filter):
                 dlExpected = round(float(dlData["size"])/1024/1024, 2)
                 print "\t" + str(dlActual) + " of " + str(dlExpected) + " MB in " + str(round(timeElapsed, 1)) + " seconds ("+str(dlSpeedk)+" kbps)"
                 numDownloaded += 1
+                sleepTime = minTimePerRequestInSecs - timeElapsed
+                if sleepTime > 0:
+                    print "Sleeping for " + str(sleepTime) + " seconds"
+                    time.sleep(sleepTime)
             else:
                 #skip
                 numSkipped += 1
@@ -228,7 +248,7 @@ def main (argv):
         if getAvailableLogs():
             if ensureDirExists(dataDir):
                 print "Downloading new log files..."
-                downloadNewLogs(filter)
+                downloadNewLogs(filter, minTimePerRequestInSecs)
                 #for log in logFiles:
                 #    print str(log["hour"]) + " | " + str(log["name"]) + " | " + str(log["timestamp"] + " | " + log["splits"][0]["part"]
 
