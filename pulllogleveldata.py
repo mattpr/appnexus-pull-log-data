@@ -167,6 +167,7 @@ def checksum(filepath):
 def downloadNewLogs (filter, minTimePerRequestInSecs):
     numExisting = 0
     numDownloaded = 0
+    numFailed = 0
     numFiltered = 0
     for log in logFiles:
         logType = log["name"]
@@ -189,20 +190,41 @@ def downloadNewLogs (filter, minTimePerRequestInSecs):
                     timestamp=timestamp,
                     siphon_name=logType
                 )
-                print "Getting: " + filename
-                timeStart = time.time()
-                dlData = downloadFile(url_logDownload, params_logDownload, filename)
-                timeEnd = time.time()
-                timeElapsed = timeEnd - timeStart
-                dlSpeedk = round(float(dlData["dlsize"])/1024/timeElapsed, 2)
-                dlActual = round(float(dlData["dlsize"])/1024/1024, 2)
-                dlExpected = round(float(dlData["size"])/1024/1024, 2)
-                print "\t" + str(dlActual) + " of " + str(dlExpected) + " MB in " + str(round(timeElapsed, 1)) + " seconds ("+str(dlSpeedk)+" kbps)"
-                numDownloaded += 1
-                sleepTime = minTimePerRequestInSecs - timeElapsed
-                if sleepTime > 0:
-                    print "Sleeping for " + str(sleepTime) + " seconds"
-                    time.sleep(sleepTime)
+                trys = 0
+                downloadCorrect = False
+                while trys < 5 and not downloadCorrect:
+
+                    print "Getting: " + filename + " (try " + str(trys) + ")"
+                    timeStart = time.time()
+                    dlData = downloadFile(url_logDownload, params_logDownload, filename)
+                    timeEnd = time.time()
+                    timeElapsed = timeEnd - timeStart
+                    dlSpeedk = round(float(dlData["dlsize"])/1024/timeElapsed, 2)
+                    dlActual = round(float(dlData["dlsize"])/1024/1024, 2)
+                    dlExpected = round(float(dlData["size"])/1024/1024, 2)
+                    print "\t" + str(dlActual) + " of " + str(dlExpected) + " MB in " + str(round(timeElapsed, 1)) + " seconds ("+str(dlSpeedk)+" kbps)"
+                    trys += 1
+
+                    downloadChecksum = checksum(filename)
+
+                    if downloadChecksum == checksum:
+                        downloadCorrect = True
+                    else:
+                        print "\tAppNexus Checksum ("+checksum+") doesn't match downloaded file ("+downloadChecksum+")."
+                        
+                    sleepTime = minTimePerRequestInSecs - timeElapsed
+                    if sleepTime > 0:
+                        print "Sleeping for " + str(sleepTime) + " seconds"
+                        time.sleep(sleepTime)
+
+                if downloadCorrect:
+                    numDownloaded += 1
+                else:
+                    print "Failed to successfully download " + filename + ".  Removing."
+                    numFailed += 1
+                    os.remove(filename)
+
+                
             else:
                 #already have this one
                 numExisting += 1
