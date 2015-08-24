@@ -176,13 +176,13 @@ def downloadNewLogs (filter, minTimePerRequestInSecs):
         timestamp = log["timestamp"]
         for logFile in log["splits"]:
             splitPart = logFile["part"]
-            checksum = logFile["checksum"]
+            anChecksum = logFile["checksum"]
             status = logFile["status"] # e.g. new
             filename = buildFileName(logType, logHour, timestamp, splitPart, "gz")
             if filter != '' and filename.find(filter) == -1:
               numFiltered += 1
               continue # skip downloading this one
-            if isNewLogFile(filename, checksum):
+            if isNewLogFile(filename, anChecksum):
                 #download
                 params_logDownload = dict(
                     split_part=splitPart,
@@ -207,10 +207,10 @@ def downloadNewLogs (filter, minTimePerRequestInSecs):
 
                     downloadChecksum = checksum(filename)
 
-                    if downloadChecksum == checksum:
+                    if downloadChecksum == anChecksum:
                         downloadCorrect = True
                     else:
-                        print "\tAppNexus Checksum ("+checksum+") doesn't match downloaded file ("+downloadChecksum+")."
+                        print "\tAppNexus Checksum ("+anChecksum+") doesn't match downloaded file ("+downloadChecksum+")."
                         
                     sleepTime = minTimePerRequestInSecs - timeElapsed
                     if sleepTime > 0:
@@ -232,6 +232,7 @@ def downloadNewLogs (filter, minTimePerRequestInSecs):
     print "Skipped " + str(numFiltered) + " (filtered) files"
     print "Skipped " + str(numExisting) + " (existing) files"
     print "Downloaded " + str(numDownloaded) + " (new/changed) files"
+    print "Failed to download " + str(numFailed) + " files."
 
 def main (argv):
   global dataDir
