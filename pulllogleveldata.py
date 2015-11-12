@@ -173,9 +173,14 @@ def downloadNewLogs (logFiles, dataDir, filter, url_logDownload, cookieJar, minT
             ensureDirExists(dataDir + "/" + logType)
             logHour = log["hour"]
             timestamp = log["timestamp"]
+            
             dupe = False
             if "dupe" in log and log["dupe"]:
                 dupe = True
+
+            if dupe: # don't download dupes
+                continue
+
             for logFile in log["splits"]:
               splitPart = logFile["part"]
               anChecksum = logFile["checksum"]
